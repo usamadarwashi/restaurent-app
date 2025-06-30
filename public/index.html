@@ -5,50 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام مبيعات المطعم</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .lang-switcher {
-            position: absolute;
-            left: 1rem;
-            top: 1rem;
-            z-index: 1000;
-        }
-        .lang-switcher button {
-            margin-left: 0.5rem;
-            padding: 0.3em 0.8em;
-            border: 1px solid #ccc;
-            background: #fff;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .lang-switcher button.active {
-            background: #0078d4;
-            color: #fff;
-            border-color: #0078d4;
-        }
-    </style>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const langSwitcher = document.getElementById('lang-switcher');
-            if (langSwitcher) {
-                langSwitcher.addEventListener('click', function (e) {
-                    if (e.target.tagName === 'BUTTON') {
-                        const lang = e.target.dataset.lang;
-                        document.documentElement.lang = lang;
-                        document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-                        // Toggle active button
-                        Array.from(langSwitcher.children).forEach(btn => btn.classList.remove('active'));
-                        e.target.classList.add('active');
-                        // Optionally, reload or update UI text here
-                    }
-                });
-            }
-        });
-    </script>
 </head>
-<div class="lang-switcher" id="lang-switcher">
-    <button data-lang="ar" class="active">العربية</button>
-    <button data-lang="en">English</button>
-</div>
 <body>
 
     <header class="navbar">
