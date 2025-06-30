@@ -1,0 +1,17 @@
+id,name,price,image
+1,شاورما دجاج,15,images/shawarma-chicken.png
+2,ساندويتش فلافل,10,images/falafel-sandwich.png
+3,عصير برتقال,5,images/orange-juice.png
+4,وجبة كبده,20,images/kabda-meal.png
+5,بيتزا مارجريتا,25,images/pizza-margherita.png
+6,برجر لحم,18,images/beef-burger.png
+7,بطاطس مقلية,7,images/fries.png
+8,سلطة فواكه,12,images/fruit-salad.png
+9,شاورما لحم,17,images/shawarma-beef.png
+10,مياه معدنية,2,images/water.png
+11,وجبة أرز بالدجاج,22,images/chicken-rice.png
+12,عصير مانجو,6,images/mango-juice.png
+13,وجبة مكرونة,16,images/pasta-meal.png
+14,حساء خضار,9,images/vegetable-soup.png
+15,قهوة,8,images/coffee.png
+16,شاي أخضر,4,images/green-tea.png

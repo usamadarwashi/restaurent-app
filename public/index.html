@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام مبيعات المطعم</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .lang-switcher {
+            position: absolute;
+            left: 1rem;
+            top: 1rem;
+            z-index: 1000;
+        }
+        .lang-switcher button {
+            margin-left: 0.5rem;
+            padding: 0.3em 0.8em;
+            border: 1px solid #ccc;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .lang-switcher button.active {
+            background: #0078d4;
+            color: #fff;
+            border-color: #0078d4;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const langSwitcher = document.getElementById('lang-switcher');
+            if (langSwitcher) {
+                langSwitcher.addEventListener('click', function (e) {
+                    if (e.target.tagName === 'BUTTON') {
+                        const lang = e.target.dataset.lang;
+                        document.documentElement.lang = lang;
+                        document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+                        // Toggle active button
+                        Array.from(langSwitcher.children).forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                        // Optionally, reload or update UI text here
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+<div class="lang-switcher" id="lang-switcher">
+    <button data-lang="ar" class="active">العربية</button>
+    <button data-lang="en">English</button>
+</div>
+<body>
+
+    <header class="navbar">
+        <div class="nav-brand">نظام مبيعات المطعم</div>
+        <nav>
+            <button class="nav-button active" data-target="main-view">الواجهة الرئيسية</button>
+            <button class="nav-button" data-target="previous-orders-view">الطلبات السابقة</button>
+            <button class="nav-button" data-target="daily-summary-view">التقارير اليومية</button>
+            <button class="nav-button" data-target="manage-products-view">إدارة الأصناف</button>
+        </nav>
+    </header>
+
+    <div class="main-content">
+        <div id="main-view" class="view-section active">
+            <div class="container three-columns">
+
+                <div class="column cart-calculator-column">
+                    <div class="cart-section">
+                        <h2>السلة <span class="cart-icon">&#128722;</span></h2>
+                        <div id="cart-items" class="cart-items">
+                            <p>السلة فارغة.</p>
+                        </div>
+                        <div class="cart-summary">
+                            <p>المجموع الكلي: <span id="cart-total">0.00</span> د.ل</p>
+                        </div>
+                    </div>
+
+                    <div class="order-processing-section">
+                        <div class="action-buttons-bottom">
+                            <button id="cancel-order-btn" class="action-button secondary-button">إلغاء الطلب</button>
+                            <button id="finish-order-btn" class="action-button primary-button">إنهاء الطلب</button>
+                        </div>
+                    </div>
+
+                    <div id="calculator-section" class="calculator-section">
+                        <h3>الآلة الحاسبة</h3>
+                        <div class="calculator-display-container">
+                            <input type="text" id="calculator-display" class="calculator-display" value="0" readonly>
+                        </div>
+                        <div class="calculator-buttons">
+                            <button class="calc-btn clear" data-value="C">C</button>
+                            <button class="calc-btn operator" data-value="/">/</button>
+                            <button class="calc-btn operator" data-value="*">X</button>
+                            <button class="calc-btn backspace" data-value="backspace">&lt;</button>
+                            
+                            <button class="calc-btn number" data-value="7">7</button>
+                            <button class="calc-btn number" data-value="8">8</button>
+                            <button class="calc-btn number" data-value="9">9</button>
+                            <button class="calc-btn operator" data-value="-">-</button>
+                            
+                            <button class="calc-btn number" data-value="4">4</button>
+                            <button class="calc-btn number" data-value="5">5</button>
+                            <button class="calc-btn number" data-value="6">6</button>
+                            <button class="calc-btn operator" data-value="+">+</button>
+                            
+                            <button class="calc-btn number" data-value="1">1</button>
+                            <button class="calc-btn number" data-value="2">2</button>
+                            <button class="calc-btn number" data-value="3">3</button>
+                            <button class="calc-btn equals" data-value="=">=</button> <button class="calc-btn number zero" data-value="0">0</button>
+                            <button class="calc-btn number" data-value=".">.</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column products-column">
+                    <h2>الأصناف</h2>
+                    <div class="products-grid" id="products-grid">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="previous-orders-view" class="view-section hidden">
+            <div class="column full-width-column">
+                <h2>جميع الطلبات السابقة</h2>
+                <div id="previous-orders-list" class="order-list">
+                    <p>لا توجد طلبات سابقة حتى الآن.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="daily-summary-view" class="view-section hidden">
+        <div class="column full-width-column">
+            <h2>موجز الحسابات اليومية</h2>
+            <div id="daily-dates-list" class="order-list"></div>
+            <div id="daily-orders-list" class="order-list"></div>
+            </div>
+        </div>
+
+        <div id="manage-products-view" class="view-section hidden">
+            <div class="column full-width-column">
+                <h2>إدارة الأصناف والأسعار</h2>
+                <button id="add-product-btn" class="action-button primary-button">إضافة صنف جديد</button>
+                <div id="product-management-form" class="product-management-form hidden">
+                    <h3>إضافة / تعديل صنف</h3>
+                    <div class="input-group">
+                        <label for="product-id-input">معرف الصنف (للتعديل):</label>
+                        <input type="number" id="product-id-input" placeholder="اتركه فارغا للإضافة" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="product-name-input">اسم الصنف:</label>
+                        <input type="text" id="product-name-input" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="product-price-input">السعر:</label>
+                        <input type="number" id="product-price-input" step="0.01" min="0" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="product-image-input">مسار الصورة:</label>
+                        <input type="text" id="product-image-input" placeholder="مثال: images/new-item.png">
+                    </div>
+                    <button id="save-product-btn" class="action-button primary-button">حفظ الصنف</button>
+                    <button id="cancel-product-edit-btn" class="action-button secondary-button">إلغاء</button>
+                </div>
+                <div id="current-products-list" class="product-list">
+                    <h3>الأصناف الحالية:</h3>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="receipt-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div id="receipt-content">
+                </div>
+            <button id="print-receipt-btn" class="action-button primary-button">طباعة الإيصال</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
