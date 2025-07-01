@@ -5,16 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام مبيعات المطعم</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
+
 </head>
 <body>
 
     <header class="navbar">
         <div class="nav-brand">نظام مبيعات المطعم</div>
         <nav>
-            <button class="nav-button active" data-target="main-view">الواجهة الرئيسية</button>
-            <button class="nav-button" data-target="previous-orders-view">الطلبات السابقة</button>
-            <button class="nav-button" data-target="daily-summary-view">التقارير اليومية</button>
-            <button class="nav-button" data-target="manage-products-view">إدارة الأصناف</button>
+            <a class="nav-button active" data-target="main-view">الواجهة الرئيسية</a>
+            <a class="nav-button" data-target="previous-orders-view">الطلبات السابقة</a>
+            <a class="nav-button" data-target="daily-summary-view">التقارير اليومية</a>
+            <a class="nav-button" data-target="manage-products-view">إدارة الأصناف</a>
         </nav>
     </header>
 
@@ -35,8 +37,8 @@
 
                     <div class="order-processing-section">
                         <div class="action-buttons-bottom">
-                            <button id="cancel-order-btn" class="action-button secondary-button">إلغاء الطلب</button>
-                            <button id="finish-order-btn" class="action-button primary-button">إنهاء الطلب</button>
+                            <a id="cancel-order-btn" class="action-button secondary-button">إلغاء الطلب</a>
+                            <a id="finish-order-btn" class="action-button primary-button">إنهاء الطلب</a>
                         </div>
                     </div>
 

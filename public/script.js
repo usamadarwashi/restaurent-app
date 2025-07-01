@@ -1,43 +1,3 @@
-// script.js
-
-
-// Function to load products from CSV
-async function loadProductsFromCSV() {
-    try {
-        const response = await fetch('products.csv');
-        if (!response.ok) {
-            throw new Error('Failed to load products CSV');
-        }
-        const csvData = await response.text();
-        return parseCSV(csvData);
-    } catch (error) {
-        console.error('Error loading products:', error);
-    }
-}
-
-// Function to parse CSV data
-function parseCSV(csvData) {
-    const lines = csvData.split('\n');
-    const products = [];
-    
-    // Skip header row if exists
-    const startLine = lines[0].includes('id,name,price,image') ? 1 : 0;
-    
-    for (let i = startLine; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (line) {
-            const [id, name, price, image] = line.split(',');
-            products.push({
-                id: parseInt(id),
-                name: name.trim(),
-                price: parseFloat(price),
-                image: image.trim()
-            });
-        }
-    }
-    return products;
-}
-
 
 // عناصر الـ DOM
 const productsGrid = document.getElementById('products-grid');
@@ -69,8 +29,85 @@ const saveProductBtn = document.getElementById('save-product-btn');
 const cancelProductEditBtn = document.getElementById('cancel-product-edit-btn');
 const currentProductsList = document.getElementById('current-products-list');
 
+// عناصر التنقل السريع
+const navButtons = document.querySelectorAll('.nav-button');
+const viewSections = document.querySelectorAll('.view-section');
 
-// --- 2. وظائف واجهة المستخدم ---
+// متغيرات الآلة الحاسبة
+let currentInput = '0';
+let firstOperand = null;
+let operator = null;
+let waitingForSecondOperand = false;
+
+// --- تحميل الأصناف من ملف CSV عند تحميل الصفحة ---
+let products = [];
+let cart = []; // السلة الحالية
+let previousOrders = []; // لتخزين الطلبات السابقة في الذاكرة (مؤقتًا)
+let dailySalesTotal = 0;
+let dailyOrdersCount = 0;
+let orderCounter = 0; // لإنشاء أرقام طلبات فريدة
+
+
+// Function to load products from CSV
+async function loadProductsFromCSV() {
+    try {
+        const response = await fetch('products.csv');
+        if (!response.ok) {
+            throw new Error('Failed to load products CSV');
+        }
+        const csvData = await response.text();
+        return parseCSV(csvData);
+    } catch (error) {
+        console.error('Error loading products:', error);
+    }
+}
+
+// Function to load previous orders from the server
+async function loadOrdersFromCSV() {
+    try {
+        const response = await fetch('/api/orders');
+        if (!response.ok) throw new Error('Failed to fetch orders');
+        const data = await response.json();
+        return data.orders || [];
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        return [];
+    }
+}
+
+async function loadProductsFromCSV() {
+    try {
+        const response = await fetch('/api/products');
+        if (!response.ok) throw new Error('Failed to fetch CSV');
+        const csvData = await response.text();
+        return parseCSV(csvData);
+    } catch (err) {
+        console.error('Error loading products:', err);
+    }
+}
+
+// Function to parse CSV data
+function parseCSV(csvData) {
+    const lines = csvData.split('\n');
+    const products = [];
+    
+    // Skip header row if exists
+    const startLine = lines[0].includes('id,name,price,image') ? 1 : 0;
+    
+    for (let i = startLine; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line) {
+            const [id, name, price, image] = line.split(',');
+            products.push({
+                id: parseInt(id),
+                name: name.trim(),
+                price: parseFloat(price),
+                image: image.trim()
+            });
+        }
+    }
+    return products;
+}
 
 // وظيفة لعرض الأصناف
 function displayProducts() {
@@ -242,8 +279,6 @@ function displayOrdersForDay(orders, date) {
     `;
     container.appendChild(summary);
 }
-
-
 // وظيفة لتحديث عرض الطلبات السابقة
 function displayPreviousOrders() {
     previousOrdersList.innerHTML = '';
@@ -295,8 +330,6 @@ function updateDailySummary() {
     dailySalesTotalSpan.textContent = dailySalesTotal.toFixed(2);
     dailyOrdersCountSpan.textContent = dailyOrdersCount;
 }
-
-// --- 3. وظائف معالجة الطلبات ---
 
 // وظيفة لإنشاء إيصال
 function generateReceipt(order) {
@@ -414,9 +447,6 @@ window.addEventListener('click', (event) => {
 });
 
 // --- وظائف التنقل بين الواجهات ---
-const navButtons = document.querySelectorAll('.nav-button');
-const viewSections = document.querySelectorAll('.view-section');
-
 navButtons.forEach(button => {
     button.addEventListener('click', () => {
         navButtons.forEach(btn => btn.classList.remove('active'));
@@ -446,144 +476,8 @@ navButtons.forEach(button => {
     });
 });
 
-// --- وظائف الآلة الحاسبة ---
-let currentInput = '0';
-let firstOperand = null;
-let operator = null;
-let waitingForSecondOperand = false;
-
-function updateCalculatorDisplay() {
-    calculatorDisplay.value = currentInput;
-}
-
-calculatorButtons.addEventListener('click', (event) => {
-    const { target } = event;
-    if (!target.matches('button')) return;
-
-    const value = target.dataset.value;
-
-    if (target.classList.contains('operator')) {
-        handleOperator(value);
-        updateCalculatorDisplay();
-        return;
-    }
-
-    if (target.classList.contains('equals')) {
-        performCalculation();
-        updateCalculatorDisplay();
-        return;
-    }
-
-    if (target.classList.contains('clear')) {
-        resetCalculator();
-        updateCalculatorDisplay();
-        return;
-    }
-
-    if (target.classList.contains('backspace')) {
-        backspace();
-        updateCalculatorDisplay();
-        return;
-    }
-
-    if (value === '.') {
-        inputDecimal(value);
-    } else {
-        inputDigit(value);
-    }
-    updateCalculatorDisplay();
-});
-
-function inputDigit(digit) {
-    if (waitingForSecondOperand === true) {
-        currentInput = digit;
-        waitingForSecondOperand = false;
-    } else {
-        currentInput = currentInput === '0' ? digit : currentInput + digit;
-    }
-}
-
-function inputDecimal(dot) {
-    if (waitingForSecondOperand === true) {
-        currentInput = '0.';
-        waitingForSecondOperand = false;
-        return;
-    }
-    if (!currentInput.includes(dot)) {
-        currentInput += dot;
-    }
-}
-
-function handleOperator(nextOperator) {
-    const inputValue = parseFloat(currentInput);
-
-    if (firstOperand === null && !isNaN(inputValue)) {
-        firstOperand = inputValue;
-    } else if (operator) {
-        if (waitingForSecondOperand) {
-            operator = nextOperator;
-            return;
-        }
-        const result = operate(firstOperand, inputValue, operator);
-        currentInput = `${parseFloat(result.toFixed(7))}`;
-        firstOperand = result;
-    }
-
-    waitingForSecondOperand = true;
-    operator = nextOperator;
-}
-
-function performCalculation() {
-    if (firstOperand === null || operator === null) {
-        return;
-    }
-
-    let inputValue = parseFloat(currentInput);
-    if (waitingForSecondOperand) {
-        inputValue = firstOperand;
-    }
-
-    const result = operate(firstOperand, inputValue, operator);
-    currentInput = `${parseFloat(result.toFixed(7))}`;
-    firstOperand = null;
-    operator = null;
-    waitingForSecondOperand = false;
-}
-
-function operate(operand1, operand2, op) {
-    switch (op) {
-        case '+': return operand1 + operand2;
-        case '-': return operand1 - operand2;
-        case '*': return operand1 * operand2;
-        case '/':
-            if (operand2 === 0) {
-                alert("لا يمكن القسمة على صفر!");
-                return 0;
-            }
-            return operand1 / operand2;
-        default: return operand2;
-    }
-}
-
-function resetCalculator() {
-    currentInput = '0';
-    firstOperand = null;
-    operator = null;
-    waitingForSecondOperand = false;
-}
-
-function backspace() {
-    if (waitingForSecondOperand) return;
-
-    currentInput = currentInput.slice(0, -1);
-    if (currentInput === '' || currentInput === '-') {
-        currentInput = '0';
-    }
-}
-
 
 // --- وظائف إدارة الأصناف ---
-
 function displayManageProductsView() {
     currentProductsList.innerHTML = '';
     products.forEach(product => {
@@ -632,7 +526,7 @@ cancelProductEditBtn.addEventListener('click', () => {
     productManagementForm.classList.add('hidden');
 });
 
-
+// --- حفظ الأصناف للداتابيس---
 async function saveProductsToCSV(products) {
     try {
         let csvContent = "id,name,price,image\n";
@@ -654,6 +548,7 @@ async function saveProductsToCSV(products) {
     }
 }
 
+// وظيفة حفظ أو تعديل صنف
 saveProductBtn.addEventListener('click', async () => {
     const id = productIdInput.value ? parseInt(productIdInput.value) : null;
     const name = productNameInput.value.trim();
@@ -698,6 +593,7 @@ saveProductBtn.addEventListener('click', async () => {
     displayProducts();
 });
 
+// وظيفة تعديل صنف
 function editProduct(id) {
     const product = products.find(p => p.id === id);
     if (product) {
@@ -709,6 +605,7 @@ function editProduct(id) {
     }
 }
 
+// وظيفة حذف صنف
 async function deleteProduct(id) {
     if (confirm(`هل أنت متأكد من حذف الصنف ذو المعرف ${id}؟`)) {
         products = products.filter(p => p.id !== id);
@@ -721,27 +618,8 @@ async function deleteProduct(id) {
         displayProducts();
     }
 }
-// --- تحميل الأصناف من ملف CSV عند تحميل الصفحة ---
-let products = [];
-let cart = []; // السلة الحالية
-let previousOrders = []; // لتخزين الطلبات السابقة في الذاكرة (مؤقتًا)
-let dailySalesTotal = 0;
-let dailyOrdersCount = 0;
-let orderCounter = 0; // لإنشاء أرقام طلبات فريدة
 
-async function loadOrdersFromCSV() {
-    try {
-        const response = await fetch('/api/orders');
-        if (!response.ok) throw new Error('Failed to fetch orders');
-        const data = await response.json();
-        return data.orders || [];
-    } catch (error) {
-        console.error('Error loading orders:', error);
-        return [];
-    }
-}
-
-
+// وظيفة لإضافة طلب إلى ملف CSV
 async function appendOrderToCSV(order) {
     try {
         const response = await fetch('/api/orders/append', {
@@ -755,37 +633,8 @@ async function appendOrderToCSV(order) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        products = await loadProductsFromCSV();
-        if (!products || products.length === 0) {
-            console.warn('No products loaded');
-        }
 
-        previousOrders = await loadOrdersFromCSV(); // ✅ Load existing orders
-        if (previousOrders.length > 0) {
-            orderCounter = Math.max(...previousOrders.map(o => o.orderNumber));
-        }
 
-        displayProducts();
-        updateCartDisplay();
-        updateDailySummary(); // so count & sales show
-        displayPreviousOrders(); // optional
-    } catch (error) {
-        console.error('Initialization error:', error);
-    }
-});
-
-async function loadProductsFromCSV() {
-    try {
-        const response = await fetch('/api/products');
-        if (!response.ok) throw new Error('Failed to fetch CSV');
-        const csvData = await response.text();
-        return parseCSV(csvData);
-    } catch (err) {
-        console.error('Error loading products:', err);
-    }
-}
 
 function ordersToCSV(orders) {
     const header = 'orderNumber,date,time,total,notes,items\n';
@@ -810,3 +659,153 @@ async function saveOrdersToCSV(orders) {
     }
 }
 
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        products = await loadProductsFromCSV();
+        if (!products || products.length === 0) {
+            console.warn('No products loaded');
+        }
+
+        previousOrders = await loadOrdersFromCSV(); // ✅ Load existing orders
+        if (previousOrders.length > 0) {
+            orderCounter = Math.max(...previousOrders.map(o => o.orderNumber));
+        }
+
+        displayProducts();
+        updateCartDisplay();
+        updateDailySummary(); // so count & sales show
+        displayPreviousOrders(); // optional
+    } catch (error) {
+        console.error('Initialization error:', error);
+    }
+});
+
+// --- وظائف الآلة الحاسبة -------------------------------------------------
+function updateCalculatorDisplay() {
+    calculatorDisplay.value = currentInput;
+}
+// --- وظائف الآلة الحاسبة ---
+calculatorButtons.addEventListener('click', (event) => {
+    const { target } = event;
+    if (!target.matches('button')) return;
+
+    const value = target.dataset.value;
+
+    if (target.classList.contains('operator')) {
+        handleOperator(value);
+        updateCalculatorDisplay();
+        return;
+    }
+
+    if (target.classList.contains('equals')) {
+        performCalculation();
+        updateCalculatorDisplay();
+        return;
+    }
+
+    if (target.classList.contains('clear')) {
+        resetCalculator();
+        updateCalculatorDisplay();
+        return;
+    }
+
+    if (target.classList.contains('backspace')) {
+        backspace();
+        updateCalculatorDisplay();
+        return;
+    }
+
+    if (value === '.') {
+        inputDecimal(value);
+    } else {
+        inputDigit(value);
+    }
+    updateCalculatorDisplay();
+});
+// --- وظائف الآلة الحاسبة ---
+function inputDigit(digit) {
+    if (waitingForSecondOperand === true) {
+        currentInput = digit;
+        waitingForSecondOperand = false;
+    } else {
+        currentInput = currentInput === '0' ? digit : currentInput + digit;
+    }
+}
+// --- وظائف الآلة الحاسبة ---
+function inputDecimal(dot) {
+    if (waitingForSecondOperand === true) {
+        currentInput = '0.';
+        waitingForSecondOperand = false;
+        return;
+    }
+    if (!currentInput.includes(dot)) {
+        currentInput += dot;
+    }
+}
+// --- وظائف الآلة الحاسبة ---
+function handleOperator(nextOperator) {
+    const inputValue = parseFloat(currentInput);
+
+    if (firstOperand === null && !isNaN(inputValue)) {
+        firstOperand = inputValue;
+    } else if (operator) {
+        if (waitingForSecondOperand) {
+            operator = nextOperator;
+            return;
+        }
+        const result = operate(firstOperand, inputValue, operator);
+        currentInput = `${parseFloat(result.toFixed(7))}`;
+        firstOperand = result;
+    }
+
+    waitingForSecondOperand = true;
+    operator = nextOperator;
+}
+// --- وظائف الآلة الحاسبة ---
+function performCalculation() {
+    if (firstOperand === null || operator === null) {
+        return;
+    }
+
+    let inputValue = parseFloat(currentInput);
+    if (waitingForSecondOperand) {
+        inputValue = firstOperand;
+    }
+
+    const result = operate(firstOperand, inputValue, operator);
+    currentInput = `${parseFloat(result.toFixed(7))}`;
+    firstOperand = null;
+    operator = null;
+    waitingForSecondOperand = false;
+}
+// --- وظائف الآلة الحاسبة ---
+function operate(operand1, operand2, op) {
+    switch (op) {
+        case '+': return operand1 + operand2;
+        case '-': return operand1 - operand2;
+        case '*': return operand1 * operand2;
+        case '/':
+            if (operand2 === 0) {
+                alert("لا يمكن القسمة على صفر!");
+                return 0;
+            }
+            return operand1 / operand2;
+        default: return operand2;
+    }
+}
+// --- وظائف الآلة الحاسبة ---
+function resetCalculator() {
+    currentInput = '0';
+    firstOperand = null;
+    operator = null;
+    waitingForSecondOperand = false;
+}
+// --- وظائف الآلة الحاسبة ---
+function backspace() {
+    if (waitingForSecondOperand) return;
+
+    currentInput = currentInput.slice(0, -1);
+    if (currentInput === '' || currentInput === '-') {
+        currentInput = '0';
+    }
+}
