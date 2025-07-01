@@ -270,48 +270,43 @@ function displayOrdersForDay(orders, date) {
         container.appendChild(div);
     });
 
-     const summary = document.createElement('div');
-    summary.classList.add('order-summary');
-    summary.innerHTML = `
-        <hr>
-        <p><strong>إجمالي الطلبات:</strong> ${orders.length}</p>
-        <p><strong>إجمالي المبيعات:</strong> ${totalForDay.toFixed(2)} د.ل</p>
-    `;
-    container.appendChild(summary);
 }
-// وظيفة لتحديث عرض الطلبات السابقة
+// وظيفة لتحديث عرض الطلبات السابقة (لعرض طلبات اليوم فقط)
 function displayPreviousOrders() {
     previousOrdersList.innerHTML = '';
 
-    if (previousOrders.length === 0) {
-        previousOrdersList.innerHTML = '<p>لا توجد طلبات سابقة حتى الآن.</p>';
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('ar-EG', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    const todayOrders = previousOrders.filter(order => order.date === todayStr);
+
+    if (todayOrders.length === 0) {
+        previousOrdersList.innerHTML = '<p>لا توجد طلبات اليوم.</p>';
         return;
     }
 
-    previousOrders.slice().reverse().forEach(order => {
+    todayOrders.slice().reverse().forEach(order => {
         const orderCard = document.createElement('div');
         orderCard.classList.add('previous-order-card');
         orderCard.innerHTML = `
-    <div class="order-header">
-        <h3>طلب رقم: #${order.orderNumber}</h3>
-        <span>${order.dateTime}</span>
-    </div>
-    <div class="order-details">
-        <p><strong>الإجمالي:</strong> ${order.total.toFixed(2)} د.ل</p>
-        ${order.notes ? `<p><strong>ملاحظات:</strong> ${order.notes}</p>` : ''}
-    </div>
-    <div class="order-items-list">
-        <p><strong>الأصناف:</strong></p>
-        ${order.items.map(item => `<p>- ${item.name} x${item.quantity} (${(item.price * item.quantity).toFixed(2)} د.ل)</p>`).join('')}
-    </div>
-    <div class="order-actions">
-        <button class="delete-order-btn" data-order-number="${order.orderNumber}">حذف</button>
-    
-    </div>
-`;
+            <div class="order-header">
+                <h3>طلب رقم: #${order.orderNumber}</h3>
+                <span>${order.dateTime}</span>
+            </div>
+            <div class="order-details">
+                <p><strong>الإجمالي:</strong> ${order.total.toFixed(2)} د.ل</p>
+                ${order.notes ? `<p><strong>ملاحظات:</strong> ${order.notes}</p>` : ''}
+            </div>
+            <div class="order-items-list">
+                <p><strong>الأصناف:</strong></p>
+                ${order.items.map(item => `<p>- ${item.name} x${item.quantity} (${(item.price * item.quantity).toFixed(2)} د.ل)</p>`).join('')}
+            </div>
+            <div class="order-actions">
+                <button class="delete-order-btn" data-order-number="${order.orderNumber}">حذف</button>
+            </div>
+        `;
         previousOrdersList.appendChild(orderCard);
 
-         // ✅ Attach the delete handler here
         orderCard.querySelector('.delete-order-btn').addEventListener('click', async (e) => {
             const number = parseInt(e.target.dataset.orderNumber);
             if (confirm(`هل تريد حذف الطلب رقم ${number}؟`)) {

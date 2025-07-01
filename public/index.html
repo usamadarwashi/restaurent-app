@@ -84,7 +84,6 @@
             <div class="column full-width-column">
                 <h2>جميع الطلبات السابقة</h2>
                 <div id="previous-orders-list" class="order-list">
-                    <p>لا توجد طلبات سابقة حتى الآن.</p>
                 </div>
             </div>
         </div>
@@ -92,8 +91,12 @@
         <div id="daily-summary-view" class="view-section hidden">
         <div class="column full-width-column">
             <h2>موجز الحسابات اليومية</h2>
-            <div id="daily-dates-list" class="order-list"></div>
-            <div id="daily-orders-list" class="order-list"></div>
+            <!-- <div id="daily-dates-list" class="order-list"></div>
+            <div id="daily-orders-list" class="order-list"></div> -->
+             <div class="daily-summary-stats">
+                <p>إجمالي المبيعات اليوم: <span id="daily-sales-total">0.00</span> د.ل</p>
+                <p>عدد الطلبات اليوم: <span id="daily-orders-count">0</span></p>
+            </div>
             </div>
         </div>
 
