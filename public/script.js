@@ -276,7 +276,7 @@ function displayPreviousOrders() {
     previousOrdersList.innerHTML = '';
 
     const today = new Date();
-    const todayStr = today.toLocaleDateString('ar-EG', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const todayStr = today.toLocaleDateString('en-EG', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
     const todayOrders = previousOrders.filter(order => order.date === todayStr);
 
@@ -368,8 +368,8 @@ finishOrderBtn.addEventListener('click', async () => {
 
     orderCounter++;
     const now = new Date();
-    const orderDate = now.toLocaleDateString('ar-EG', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const orderTime = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const orderDate = now.toLocaleDateString('en-EG', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const orderTime = now.toLocaleTimeString('en-EG', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     const newOrder = {
         orderNumber: orderCounter,

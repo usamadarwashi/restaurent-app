@@ -6,8 +6,9 @@ const cors = require('cors');
 
 const app = express();
 const PORT = 3000;
-const CSV_FILE = path.join(__dirname, 'products.csv');
+const PRODUCTS_FILE = path.join(__dirname, 'products.csv');
 const ORDERS_FILE = path.join(__dirname, 'orders.csv');
+const REPORTS_FILE = path.join(__dirname, ' reports.csv');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -80,14 +81,22 @@ app.get('/api/orders', (req, res) => {
     });
 });
 
-
+//TODO add apis for fetching and updating reports
+app.get('/api/reports', (req, res) => {
+    fs.readFile(REPORTS_FILE, 'utf8', (err, data) => {
+        if (err) {
+            return res.status(500).json({ error: 'Unable to read reports file' });
+        }
+        res.json({ reports });
+    });
+});
 
 
 // Read products from CSV
 app.get('/api/products', (req, res) => {
-    fs.readFile(CSV_FILE, 'utf8', (err, data) => {
+    fs.readFile(PRODUCTS_FILE, 'utf8', (err, data) => {
         if (err) {
-            return res.status(500).json({ error: 'Unable to read CSV file' });
+            return res.status(500).json({ error: 'Unable to read products file' });
         }
         res.send(data);
     });
@@ -96,7 +105,7 @@ app.get('/api/products', (req, res) => {
 // Write products to CSV
 app.post('/api/products', (req, res) => {
     const csv = req.body.csv;
-    fs.writeFile(CSV_FILE, csv, 'utf8', (err) => {
+    fs.writeFile(PRODUCTS_FILE, csv, 'utf8', (err) => {
         if (err) {
             return res.status(500).json({ error: 'Failed to write to CSV file' });
         }
@@ -107,3 +116,4 @@ app.post('/api/products', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
+
