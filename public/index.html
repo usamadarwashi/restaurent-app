@@ -88,17 +88,33 @@
             </div>
         </div>
 
-        <div id="daily-summary-view" class="view-section hidden">
-        <div class="column full-width-column">
-            <h2>موجز الحسابات اليومية</h2>
-            <!-- <div id="daily-dates-list" class="order-list"></div>
-            <div id="daily-orders-list" class="order-list"></div> -->
-             <div class="daily-summary-stats">
-                <p>إجمالي المبيعات اليوم: <span id="daily-sales-total">0.00</span> د.ل</p>
-                <p>عدد الطلبات اليوم: <span id="daily-orders-count">0</span></p>
-            </div>
+<div id="daily-summary-view" class="view-section hidden">
+    <div class="column full-width-column">
+        <h2>موجز الحسابات اليومية</h2>
+                <!-- Keep your daily summary -->
+        <div class="daily-summary-stats">
+            <h3>إحصائيات اليوم</h3>
+            <p>إجمالي المبيعات اليوم: <span id="daily-sales-total">0.00</span> د.ل</p>
+            <p>عدد الطلبات اليوم: <span id="daily-orders-count">0</span></p>
+        </div>
+        <!-- Add this date picker section -->
+        <div class="date-picker-section">
+            <label for="report-date">اختر تاريخ:</label>
+            <input type="date" id="report-date">
+            <button id="load-report-btn" class="action-button-1">عرض التقرير</button>
+        </div>
+        
+        <!-- Add this report details section -->
+        <div class="report-details">
+            <h3>تفاصيل التقرير</h3>
+            <div class="report-stats">
+                <p>إجمالي المبيعات: <span id="report-total-sales">0.00</span> د.ل</p>
+                <p>عدد الطلبات: <span id="report-orders-count">0</span></p>
             </div>
         </div>
+        
+    </div>
+</div>
 
         <div id="manage-products-view" class="view-section hidden">
             <div class="column full-width-column">

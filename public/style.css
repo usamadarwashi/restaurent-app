@@ -723,3 +723,54 @@ h2 {
 .product-list-item .actions .delete-product-btn:hover {
     background-color: #c82333;
 }
+.date-picker-section {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.date-picker-section label {
+    font-weight: bold;
+}
+
+.date-picker-section input {
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.report-details {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #e9ecef;
+    border-radius: 8px;
+}
+
+.report-stats {
+    font-size: 1.2em;
+    margin-top: 10px;
+}
+
+.daily-summary-stats {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #d1ecf1;
+    border-radius: 8px;
+}
+
+.action-button-1 {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.1s;
+    flex: 1;
+    background-color: #0056b3;
+    color: white
+}

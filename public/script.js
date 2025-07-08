@@ -33,11 +33,19 @@ const currentProductsList = document.getElementById('current-products-list');
 const navButtons = document.querySelectorAll('.nav-button');
 const viewSections = document.querySelectorAll('.view-section');
 
+// Add date picker functionality
+const datePicker = document.getElementById('report-date');
+const loadReportBtn = document.getElementById('load-report-btn');
+const reportTotalSales = document.getElementById('report-total-sales');
+const reportOrdersCount = document.getElementById('report-orders-count');
+
 // متغيرات الآلة الحاسبة
 let currentInput = '0';
 let firstOperand = null;
 let operator = null;
 let waitingForSecondOperand = false;
+let reports = [];
+
 
 // --- تحميل الأصناف من ملف CSV عند تحميل الصفحة ---
 let products = [];
@@ -309,9 +317,15 @@ function displayPreviousOrders() {
 
         orderCard.querySelector('.delete-order-btn').addEventListener('click', async (e) => {
             const number = parseInt(e.target.dataset.orderNumber);
+            const orderToDelete = previousOrders.find(o => o.orderNumber === number); // Add this line
+            
             if (confirm(`هل تريد حذف الطلب رقم ${number}؟`)) {
                 previousOrders = previousOrders.filter(o => o.orderNumber !== number);
                 await saveOrdersToCSV(previousOrders);
+                
+                // Add this to update report:
+                await updateReportForDate(orderToDelete.date, -orderToDelete.total, -1);
+                
                 displayPreviousOrders();
                 updateDailySummary();
                 alert(`تم حذف الطلب رقم ${number}`);
@@ -320,10 +334,74 @@ function displayPreviousOrders() {
     });
 }
 
+async function updateReportForDate(date, salesDelta, countDelta) {
+    try {
+        // Find existing report for date
+        const existingReport = reports.find(r => r.date === date);
+        let newTotal = salesDelta;
+        let newCount = countDelta;
+        
+        if (existingReport) {
+            newTotal = existingReport.totalSales + salesDelta;
+            newCount = existingReport.ordersCount + countDelta;
+        }
+        
+        // Update server
+        const response = await fetch('/api/reports/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                date, 
+                totalSales: newTotal, 
+                ordersCount: newCount 
+            })
+        });
+        
+        if (!response.ok) throw new Error('Failed to update report');
+        
+        // Update local reports array
+        if (existingReport) {
+            existingReport.totalSales = newTotal;
+            existingReport.ordersCount = newCount;
+        } else {
+            reports.push({ 
+                date, 
+                totalSales: newTotal, 
+                ordersCount: newCount 
+            });
+        }
+        
+        // Update UI if viewing today's report
+        const today = new Date();
+        const todayStr = today.toLocaleDateString('en-EG', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric' 
+        });
+        
+        if (date === todayStr) {
+            updateDailySummary();
+        }
+    } catch (err) {
+        console.error('Error updating report:', err);
+    }
+}
 // وظيفة لتحديث إحصائيات المبيعات اليومية
 function updateDailySummary() {
-    dailySalesTotalSpan.textContent = dailySalesTotal.toFixed(2);
-    dailyOrdersCountSpan.textContent = dailyOrdersCount;
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('en-EG', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+    });
+    
+    const todayReport = reports.find(r => r.date === todayStr) || {
+        totalSales: 0,
+        ordersCount: 0
+    };
+    
+    dailySalesTotalSpan.textContent = todayReport.totalSales.toFixed(2);
+    dailyOrdersCountSpan.textContent = todayReport.ordersCount;
 }
 
 // وظيفة لإنشاء إيصال
@@ -383,8 +461,10 @@ finishOrderBtn.addEventListener('click', async () => {
 
 
     previousOrders.push(newOrder);
-    dailySalesTotal += totalAmount;
-    dailyOrdersCount++;
+    await updateReportForDate(orderDate, totalAmount, 1);
+
+    // dailySalesTotal += totalAmount;
+    // dailyOrdersCount++;
 
     await appendOrderToCSV(newOrder);
 
@@ -628,7 +708,30 @@ async function appendOrderToCSV(order) {
     }
 }
 
-
+loadReportBtn.addEventListener('click', () => {
+    const selectedDate = new Date(datePicker.value);
+    if (isNaN(selectedDate)) {
+        alert('الرجاء اختيار تاريخ صحيح');
+        return;
+    }
+    
+    const dateStr = selectedDate.toLocaleDateString('en-EG', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+    });
+    
+    const report = reports.find(r => r.date === dateStr);
+    
+    if (report) {
+        reportTotalSales.textContent = report.totalSales.toFixed(2);
+        reportOrdersCount.textContent = report.ordersCount;
+    } else {
+        reportTotalSales.textContent = '0.00';
+        reportOrdersCount.textContent = '0';
+        alert('لا توجد بيانات لهذا التاريخ');
+    }
+});
 
 
 function ordersToCSV(orders) {
@@ -665,6 +768,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (previousOrders.length > 0) {
             orderCounter = Math.max(...previousOrders.map(o => o.orderNumber));
         }
+        await loadReportsFromServer();
 
         displayProducts();
         updateCartDisplay();
@@ -674,6 +778,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Initialization error:', error);
     }
 });
+
+async function loadReportsFromServer() {
+    try {
+        const response = await fetch('/api/reports');
+        if (!response.ok) throw new Error('Failed to load reports');
+        const data = await response.json();
+        reports = data.reports || [];
+        
+        // Add this to update UI after loading reports
+        updateDailySummary(); 
+    } catch (err) {
+        console.error('Error loading reports:', err);
+    }
+}
 
 // --- وظائف الآلة الحاسبة -------------------------------------------------
 function updateCalculatorDisplay() {

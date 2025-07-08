@@ -8,7 +8,7 @@ const app = express();
 const PORT = 3000;
 const PRODUCTS_FILE = path.join(__dirname, 'products.csv');
 const ORDERS_FILE = path.join(__dirname, 'orders.csv');
-const REPORTS_FILE = path.join(__dirname, ' reports.csv');
+const REPORTS_FILE = path.join(__dirname, 'reports.csv');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -81,15 +81,6 @@ app.get('/api/orders', (req, res) => {
     });
 });
 
-//TODO add apis for fetching and updating reports
-app.get('/api/reports', (req, res) => {
-    fs.readFile(REPORTS_FILE, 'utf8', (err, data) => {
-        if (err) {
-            return res.status(500).json({ error: 'Unable to read reports file' });
-        }
-        res.json({ reports });
-    });
-});
 
 
 // Read products from CSV
@@ -117,3 +108,69 @@ app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
 
+app.get('/api/reports', (req, res) => {
+    fs.readFile(REPORTS_FILE, 'utf8', (err, data) => {
+        if (err && err.code === 'ENOENT') {
+            // If file doesn't exist, return empty array
+            return res.json({ reports: [] });
+        }
+        if (err) {
+            return res.status(500).json({ error: 'Unable to read reports file' });
+        }
+        
+        const lines = data.trim().split('\n');
+        const reports = [];
+        
+        // Skip header
+        for (let i = 1; i < lines.length; i++) {
+            const [date, totalSales, ordersCount] = lines[i].split(',');
+            reports.push({
+                date,
+                totalSales: parseFloat(totalSales),
+                ordersCount: parseInt(ordersCount)
+            });
+        }
+        
+        res.json({ reports });
+    });
+});
+
+app.post('/api/reports/update', (req, res) => {
+    const { date, totalSales, ordersCount } = req.body;
+    
+    fs.readFile(REPORTS_FILE, 'utf8', (err, data) => {
+        let lines = [];
+        let headerExists = false;
+        
+        if (!err && data) {
+            lines = data.trim().split('\n');
+            headerExists = lines.length > 0;
+        }
+        
+        // Create header if needed
+        if (!headerExists) {
+            lines.push('date,totalSales,ordersCount');
+        }
+        
+        let found = false;
+        const newLines = lines.map(line => {
+            const [existingDate] = line.split(',');
+            if (existingDate === date) {
+                found = true;
+                return `${date},${totalSales},${ordersCount}`;
+            }
+            return line;
+        });
+        
+        if (!found) {
+            newLines.push(`${date},${totalSales},${ordersCount}`);
+        }
+        
+        fs.writeFile(REPORTS_FILE, newLines.join('\n'), 'utf8', (err) => {
+            if (err) {
+                return res.status(500).json({ error: 'Failed to update reports' });
+            }
+            res.json({ success: true });
+        });
+    });
+});
